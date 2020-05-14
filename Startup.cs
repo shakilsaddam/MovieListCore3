@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MovieListCore3.Models;
 
 namespace MovieListCore3
 {
@@ -23,6 +25,15 @@ namespace MovieListCore3
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+                options.CheckConsentNeeded = context => true;
+                options.MinimumSameSitePolicy = Microsoft.AspNetCore.Http.SameSiteMode.None;
+            });
+
+            services.AddDbContext<MvcMovieContext>(options =>  options.UseSqlite("Filename=MvcMovie.db"));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -34,18 +45,19 @@ namespace MovieListCore3
             }
             else
             {
-                app.UseExceptionHandler("/Error");
+                app.UseExceptionHandler("/Home/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
             }
 
             app.UseStaticFiles();
-
+            app.UseCookiePolicy();
             app.UseRouting();
-
-            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapControllerRoute("default", "{controller=Movies}/{action=Index}/{id?}");
             });
         }
     }
